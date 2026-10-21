@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reviewLink: REVIEW_LINK_DEFAULT,
   defaultTax: 0,
   uiLang: "en",
+  theme: "light",
 };
 
 /** Field defaults used to normalize jobs saved by older builds. */

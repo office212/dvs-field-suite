@@ -3,6 +3,7 @@ export type PayStatus = "paid" | "due" | "estimate";
 export type PayMethod = "cash" | "zelle" | "card" | "check" | "invoice" | "other";
 export type DocKind = "certificate" | "estimate";
 export type UiLang = "en" | "he";
+export type Theme = "light" | "dark";
 export type ReportLang = "en" | "es" | "he";
 export type Screen = "intake" | "air" | "work" | "quote" | "send";
 export type FlowBand = "critical" | "poor" | "marginal" | "good" | "excellent";
@@ -63,4 +64,5 @@ export type Settings = {
   reviewLink: string;
   defaultTax: number;
   uiLang: UiLang;
+  theme: Theme;
 };
