@@ -44,7 +44,7 @@ import { compressImage } from "@/lib/dvs/photos";
 import { buildFollowUp, buildHcpNote, buildReport, jobMetrics, narrative } from "@/lib/dvs/report";
 import { copyText, shareText, smsUrl, whatsappUrl } from "@/lib/dvs/share";
 import { exportBackup, importBackup, pendingSuggestions, useDvs } from "@/lib/dvs/store";
-import type { PayMethod, PayStatus, ReportLang, Unit } from "@/lib/dvs/types";
+import { MAX_PHOTOS_PER_SIDE, type PayMethod, type PayStatus, type ReportLang, type Unit } from "@/lib/dvs/types";
 import { Certificate } from "./Certificate";
 import { SignaturePad } from "./SignaturePad";
 import { Chip, controlClass, Field, Section, Segment, SelectField, Stepper, WhatsAppIcon } from "./ui";
@@ -631,41 +631,76 @@ export function EvidencePanel() {
   const lang = useLang();
   const job = useDvs((state) => state.job);
   const setPhoto = useDvs((state) => state.setPhoto);
+  const addPhotos = useDvs((state) => state.addPhotos);
+  const removePhoto = useDvs((state) => state.removePhoto);
   const setSignature = useDvs((state) => state.setSignature);
 
-  type PhotoKey = "photoBefore" | "photoAfter" | "meterBefore" | "meterAfter";
+  type VentKey = "photoBefore" | "photoAfter";
+  type MeterKey = "meterBefore" | "meterAfter";
 
-  async function onFile(file: File | undefined, which: PhotoKey) {
+  async function onFile(file: File | undefined, which: MeterKey) {
     if (!file) return;
     try {
       setPhoto(which, await compressImage(file));
     } catch {
-      /* keep the previous photo */
+      // Never fail silently: an unreadable pick (e.g. a HEIC the converter
+      // also rejected) must tell the tech what happened.
+      toast.error(t(lang, "photoError"), { duration: 8000 });
     }
   }
+
+  async function onFiles(files: FileList | null, which: VentKey) {
+    if (!files || files.length === 0) return;
+    const dataUrls: string[] = [];
+    let failed = false;
+    let skippedForCap = 0;
+    // Sequential on purpose: each file runs the full decode/convert pipeline,
+    // and the cap is checked against what is already stored plus this batch.
+    for (const file of files) {
+      if (job[which].length + dataUrls.length >= MAX_PHOTOS_PER_SIDE) {
+        skippedForCap++;
+        continue;
+      }
+      try {
+        dataUrls.push(await compressImage(file));
+      } catch {
+        failed = true;
+      }
+    }
+    if (dataUrls.length > 0) addPhotos(which, dataUrls);
+    if (skippedForCap > 0) toast.info(t(lang, "photosFull"));
+    if (failed) toast.error(t(lang, "photoError"), { duration: 8000 });
+  }
+
+  const firstBefore = job.photoBefore[0];
+  const firstAfter = job.photoAfter[0];
 
   return (
     <Section title={t(lang, "photos")}>
       <div className="grid grid-cols-2 gap-3">
-        <PhotoSlot
+        <PhotoGallery
           label={t(lang, "beforePhoto")}
           hint={t(lang, "photoHintBefore")}
-          src={job.photoBefore}
-          onFile={(file) => void onFile(file, "photoBefore")}
-          onClear={() => setPhoto("photoBefore", null)}
+          photos={job.photoBefore}
+          onFiles={(files) => void onFiles(files, "photoBefore")}
+          onRemove={(index) => removePhoto("photoBefore", index)}
+          addLabel={t(lang, "addPhoto")}
+          countLabel={t(lang, "photoCount", { count: job.photoBefore.length, max: MAX_PHOTOS_PER_SIDE })}
           clearLabel={t(lang, "remove")}
         />
-        <PhotoSlot
+        <PhotoGallery
           label={t(lang, "afterPhoto")}
           hint={t(lang, "photoHintAfter")}
-          src={job.photoAfter}
-          onFile={(file) => void onFile(file, "photoAfter")}
-          onClear={() => setPhoto("photoAfter", null)}
+          photos={job.photoAfter}
+          onFiles={(files) => void onFiles(files, "photoAfter")}
+          onRemove={(index) => removePhoto("photoAfter", index)}
+          addLabel={t(lang, "addPhoto")}
+          countLabel={t(lang, "photoCount", { count: job.photoAfter.length, max: MAX_PHOTOS_PER_SIDE })}
           clearLabel={t(lang, "remove")}
         />
       </div>
-      {job.photoBefore && job.photoAfter ? (
-        <Compare before={job.photoBefore} after={job.photoAfter} label={t(lang, "compare")} />
+      {firstBefore && firstAfter ? (
+        <Compare before={firstBefore} after={firstAfter} label={t(lang, "compare")} />
       ) : null}
       <h3 className="mt-5 mb-2 text-sm font-semibold">{t(lang, "meters")}</h3>
       <div className="grid grid-cols-2 gap-3">
@@ -699,6 +734,67 @@ export function EvidencePanel() {
         <SignaturePad value={job.signature} onChange={setSignature} />
       </div>
     </Section>
+  );
+}
+
+function PhotoGallery({
+  label,
+  hint,
+  photos,
+  onFiles,
+  onRemove,
+  addLabel,
+  countLabel,
+  clearLabel,
+}: {
+  label: string;
+  hint: string;
+  photos: string[];
+  onFiles: (files: FileList | null) => void;
+  onRemove: (index: number) => void;
+  addLabel: string;
+  countLabel: string;
+  clearLabel: string;
+}) {
+  return (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-xs text-faint">{countLabel}</span>
+      </div>
+      <p className="mb-2 text-xs text-faint">{hint}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {photos.map((src, index) => (
+          <div key={index} className="relative">
+            <img src={src} alt="" className="aspect-square w-full rounded-lg border border-line object-cover" />
+            <button
+              type="button"
+              className="absolute end-1 top-1 grid size-9 place-items-center rounded-lg bg-ink text-paper"
+              onClick={() => onRemove(index)}
+              aria-label={clearLabel}
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        ))}
+        {photos.length < MAX_PHOTOS_PER_SIDE ? (
+          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-line bg-bg text-center">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={(event) => {
+                onFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />
+            <Camera className="mb-1 size-5 text-accent" />
+            <span className="px-2 text-sm font-semibold">{addLabel}</span>
+          </label>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

@@ -35,7 +35,7 @@ export function Certificate({
     job.docKind === "estimate" ? "stampEstimate" : job.payStatus === "paid" ? "stampPaid" : job.payStatus === "due" ? "stampDue" : "stampEstimate";
   const hazards = job.hazards.map((id) => byId(HAZARDS, id)).filter((item) => item !== undefined);
   const actions = job.actions.map((id) => byId(ACTIONS, id)).filter((item) => item !== undefined);
-  const photos = Boolean(job.photoBefore || job.photoAfter);
+  const photos = job.photoBefore.length > 0 || job.photoAfter.length > 0;
 
   return (
     <article
@@ -118,9 +118,9 @@ export function Certificate({
       ) : null}
 
       {photos ? (
-        <div className="grid grid-cols-2 gap-3 px-4 pb-4">
-          <Photo src={job.photoBefore} label={t(lang, "beforePhoto")} />
-          <Photo src={job.photoAfter} label={t(lang, "afterPhoto")} />
+        <div className="space-y-3 px-4 pb-4">
+          <PhotoGrid photos={job.photoBefore} label={t(lang, "beforePhoto")} />
+          <PhotoGrid photos={job.photoAfter} label={t(lang, "afterPhoto")} />
         </div>
       ) : null}
 
@@ -243,6 +243,27 @@ function List({ title, items, empty }: { title: string; items: string[]; empty: 
         ))}
       </ul>
     </div>
+  );
+}
+
+function PhotoGrid({ photos, label }: { photos: string[]; label: string }) {
+  if (photos.length === 0) return null;
+  return (
+    <figure>
+      <figcaption className="mb-1 text-xs font-bold tracking-wide uppercase">
+        {label} · {photos.length}
+      </figcaption>
+      <div className="cert-photos grid grid-cols-4 gap-1.5">
+        {photos.map((src, index) => (
+          <img
+            key={index}
+            src={src}
+            alt=""
+            className="h-20 w-full rounded-md border border-paper-line object-cover"
+          />
+        ))}
+      </div>
+    </figure>
   );
 }
 
