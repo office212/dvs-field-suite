@@ -182,6 +182,12 @@ input[type="checkbox"] {
     height: 7.5rem;
   }
 
+  /* Vent photo grids (up to 8 per side) print much smaller than the meter
+     photos so a photo-heavy job still fits the page as well as possible. */
+  #certificate .cert-photos img {
+    height: 4.25rem;
+  }
+
   .certificate {
     border: none !important;
     border-radius: 0 !important;
