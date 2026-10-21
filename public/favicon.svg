@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Dryer Vent Services">
+  <rect width="32" height="32" rx="7" fill="#070B14"/>
+  <circle cx="16" cy="16" r="11" fill="#172238"/>
+  <circle cx="16" cy="16" r="10.15" fill="none" stroke="#F7F4EF" stroke-width="1.7"/>
+  <rect x="8.2" y="10.3" width="15.6" height="2.15" rx="1.05" fill="#F7F4EF"/>
+  <rect x="8.2" y="14.9" width="15.6" height="2.15" rx="1.05" fill="#F7F4EF"/>
+  <rect x="8.2" y="19.5" width="15.6" height="2.15" rx="1.05" fill="#FF6B00"/>
+</svg>
