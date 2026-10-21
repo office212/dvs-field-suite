@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Barlow", "Heebo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-bg: #070b14;
+  --color-surface: #10182b;
+  --color-surface-2: #172238;
+  --color-surface-3: #22314d;
+  --color-line: #31425f;
+  --color-fg: #f4f7fb;
+  --color-muted: #93a0b8;
+  --color-faint: #6d7c96;
+  --color-accent: #ff6b00;
+  --color-accent-soft: #3a220f;
+  --color-ink: #0b1320;
+  --color-danger: #fb7185;
+  --color-danger-soft: #3a1c28;
+  --color-ok: #34d399;
+  --color-ok-soft: #0f3b32;
+  --color-warn: #fbbf24;
+  --color-warn-soft: #3a2e12;
+  --color-paper: #f7f4ef;
+  --color-paper-ink: #1a1f2b;
+  --color-paper-muted: #5c6575;
+  --color-paper-line: #e4ddd2;
+  --color-paper-soft: #efeae3;
+  --color-paper-danger: #fde8ec;
+  --color-paper-danger-ink: #9f1239;
+  --color-paper-ok: #e7f6ef;
+  --color-paper-ok-ink: #047857;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-ink);
+  }
+}
+
+.font-he {
+  font-family: "Heebo", "Barlow", ui-sans-serif, sans-serif;
+}
+
+.nav-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-force {
+    display: block !important;
+  }
+
+  /* Print only the certificate, wherever the app is mounted. */
+  body * {
+    visibility: hidden;
+  }
+
+  #certificate,
+  #certificate * {
+    visibility: visible;
+  }
+
+  #certificate {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+
+  /* Keep the certificate on one page: never split the container, and
+     especially keep the signature + footer block with the body. */
+  #certificate,
+  #certificate footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Slightly tighter print spacing so a typical job (with photos) fits
+     on a single page. Screen layout is untouched. */
+  #certificate header,
+  #certificate footer {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  #certificate figure img {
+    height: 7.5rem;
+  }
+
+  .certificate {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  @page {
+    size: letter;
+    margin: 12mm;
+  }
+}
