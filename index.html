@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -8,7 +8,14 @@
       name="description"
       content="Field command suite for Dryer Vent Services: airflow diagnostics, photo evidence, pricing and a customer-ready service certificate. Works fully offline."
     />
-    <meta name="theme-color" content="#0B132B" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <style>
+      /* Light shell before the app boots (default theme is light), so a
+         returning user never sees a dark flash. */
+      html {
+        background: #eceff4;
+      }
+    </style>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="apple-touch-icon" href="./icons/icon-180.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
