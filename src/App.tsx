@@ -1,4 +1,4 @@
-import { Archive, MapPin, Phone, Plus, Save, Settings as SettingsIcon } from "lucide-react";
+import { Archive, MapPin, Moon, Phone, Plus, Save, Settings as SettingsIcon, Sun } from "lucide-react";
 import { useEffect } from "react";
 import { Toaster, toast } from "sonner";
 import { STORAGE_ERROR_EVENT, flushStorage, requestPersistence } from "@/lib/dvs/idb";
@@ -183,6 +183,8 @@ export default function App() {
   const hydrated = useDvs((state) => state.hydrated);
   const setHydrated = useDvs((state) => state.setHydrated);
   const uiLang = useDvs((state) => state.settings.uiLang);
+  const theme = useDvs((state) => state.settings.theme);
+  const patchSettings = useDvs((state) => state.patchSettings);
   const businessName = useDvs((state) => state.settings.businessName);
   const jobId = useDvs((state) => state.job.id);
   const screen = useDvs((state) => state.screen);
@@ -219,6 +221,14 @@ export default function App() {
     document.documentElement.lang = uiLang;
     document.documentElement.dir = uiLang === "he" ? "rtl" : "ltr";
   }, [uiLang]);
+
+  // Theme comes from the persisted setting (default light); the OS
+  // preference no longer decides. Keep the browser chrome color in sync.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0B132B" : "#FFFFFF");
+  }, [theme]);
 
   if (!hydrated) {
     return (
@@ -276,6 +286,15 @@ export default function App() {
               title={t(uiLang, "settings")}
             >
               <SettingsIcon className="size-5" />
+            </button>
+            <button
+              type="button"
+              className="grid size-11 place-items-center rounded-lg border border-line bg-surface-2"
+              onClick={() => patchSettings({ theme: theme === "dark" ? "light" : "dark" })}
+              aria-label={`${t(uiLang, "theme")}: ${t(uiLang, theme === "dark" ? "dark" : "light")}`}
+              title={`${t(uiLang, "theme")}: ${t(uiLang, theme === "dark" ? "dark" : "light")}`}
+            >
+              {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
             </button>
             <button
               type="button"
@@ -340,7 +359,7 @@ export default function App() {
       {overlay === "jobs" ? <JobsOverlay /> : null}
       {overlay === "settings" ? <SettingsOverlay /> : null}
       <ConfirmDialog />
-      <Toaster position="top-center" theme="dark" />
+      <Toaster position="top-center" theme={theme} />
     </div>
   );
 }

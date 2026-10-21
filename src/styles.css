@@ -4,23 +4,25 @@
   --font-sans: "Barlow", "Heebo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --color-bg: #070b14;
-  --color-surface: #10182b;
-  --color-surface-2: #172238;
-  --color-surface-3: #22314d;
-  --color-line: #31425f;
-  --color-fg: #f4f7fb;
-  --color-muted: #93a0b8;
-  --color-faint: #6d7c96;
-  --color-accent: #ff6b00;
-  --color-accent-soft: #3a220f;
+  /* Light theme is the default palette. The dark palette lives under
+     :root[data-theme="dark"] in the base layer below. */
+  --color-bg: #eceff4;
+  --color-surface: #ffffff;
+  --color-surface-2: #f2f5f9;
+  --color-surface-3: #e2e9f1;
+  --color-line: #d0d9e4;
+  --color-fg: #16233c;
+  --color-muted: #51637e;
+  --color-faint: #8494ab;
+  --color-accent: #e85d00;
+  --color-accent-soft: #fdebd8;
   --color-ink: #0b1320;
-  --color-danger: #fb7185;
-  --color-danger-soft: #3a1c28;
-  --color-ok: #34d399;
-  --color-ok-soft: #0f3b32;
-  --color-warn: #fbbf24;
-  --color-warn-soft: #3a2e12;
+  --color-danger: #e11d48;
+  --color-danger-soft: #fde8ec;
+  --color-ok: #059669;
+  --color-ok-soft: #e6f5ee;
+  --color-warn: #b45309;
+  --color-warn-soft: #fbf0d9;
   --color-paper: #f7f4ef;
   --color-paper-ink: #1a1f2b;
   --color-paper-muted: #5c6575;
@@ -38,6 +40,33 @@
 }
 
 @layer base {
+  /* Dark theme: applied only when the user picks it in the app settings
+     (persisted as data-theme on <html>). Paper tokens stay light in both
+     themes so the certificate always looks the same. */
+  :root[data-theme="dark"] {
+    --color-bg: #070b14;
+    --color-surface: #10182b;
+    --color-surface-2: #172238;
+    --color-surface-3: #22314d;
+    --color-line: #31425f;
+    --color-fg: #f4f7fb;
+    --color-muted: #93a0b8;
+    --color-faint: #6d7c96;
+    --color-accent: #ff6b00;
+    --color-accent-soft: #3a220f;
+    --color-danger: #fb7185;
+    --color-danger-soft: #3a1c28;
+    --color-ok: #34d399;
+    --color-ok-soft: #0f3b32;
+    --color-warn: #fbbf24;
+    --color-warn-soft: #3a2e12;
+    color-scheme: dark;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
