@@ -10,6 +10,9 @@ export type FlowBand = "critical" | "poor" | "marginal" | "good" | "excellent";
 
 export type Localized = { en: string; es: string; he: string };
 
+/** Max vent photos kept per side (before / after) on one job. */
+export const MAX_PHOTOS_PER_SIDE = 8;
+
 export type Job = {
   id: string;
   createdAt: string;
@@ -42,8 +45,8 @@ export type Job = {
   showPricing: boolean;
   docKind: DocKind;
   notes: string;
-  photoBefore: string | null;
-  photoAfter: string | null;
+  photoBefore: string[];
+  photoAfter: string[];
   meterBefore: string | null;
   meterAfter: string | null;
   signature: string | null;

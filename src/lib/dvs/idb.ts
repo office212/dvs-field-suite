@@ -92,7 +92,11 @@ export async function flushStorage(): Promise<boolean> {
     }
   }
   if (ok) failed = false;
-  else reportFailure();
+  // The warning exists to flag real data loss: user edits that could not be
+  // written. An empty flush (fired on pagehide/visibilitychange) has nothing
+  // at stake, and a failed read during first-load hydration is not a failure
+  // to persist, so neither may raise it.
+  else if (batch.length > 0) reportFailure();
   return ok;
 }
 
@@ -133,7 +137,18 @@ export const idbStorage = {
       }
       return memoryFallback.get(name) ?? null;
     } catch {
-      reportFailure();
+      // A failed read (IndexedDB blocked or unavailable, most likely during
+      // first-load hydration in a fresh profile) must NOT raise the storage
+      // warning: nothing has been written yet, so nothing is at risk, and the
+      // app keeps working from memory. If persistence really is broken, the
+      // first actual write will fail in flushStorage and warn then. Still try
+      // the legacy localStorage copy before giving up on the read.
+      try {
+        const legacy = localStorage.getItem(name);
+        if (legacy !== null) return legacy;
+      } catch {
+        /* localStorage unavailable too */
+      }
       return memoryFallback.get(name) ?? null;
     }
   },

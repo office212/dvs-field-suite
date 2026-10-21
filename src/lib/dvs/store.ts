@@ -4,6 +4,7 @@ import { CLEAN_IDS, SUGGEST_FOR_HAZARD, TIER_FOR_TERMINATION } from "./content";
 import { clampReading, fromCfm, sequentialJobId, todayISO, toCfm, unitStep } from "./calc";
 import { idbStorage } from "./idb";
 import type { DocKind, Job, PayMethod, PayStatus, ReportLang, SavedJob, Settings, Unit } from "./types";
+import { MAX_PHOTOS_PER_SIDE } from "./types";
 
 export const REVIEW_LINK_DEFAULT = "https://g.page/r/CSb74Pe3W9RVEBE/review";
 
@@ -50,16 +51,37 @@ const JOB_DEFAULTS: Omit<Job, "id" | "createdAt"> = {
   showPricing: true,
   docKind: "certificate",
   notes: "",
-  photoBefore: null,
-  photoAfter: null,
+  photoBefore: [],
+  photoAfter: [],
   meterBefore: null,
   meterAfter: null,
   signature: null,
   autoPrice: true,
 };
 
+/**
+ * Normalize a vent-photo field from any saved build: older jobs stored a
+ * single data URL (or null); current jobs store an array. Anything unusable
+ * is dropped and the result is capped, so no saved photo is ever lost in the
+ * upgrade and nothing downstream has to care which shape was on disk.
+ */
+function toPhotoList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string" && item.length > 0)
+      .slice(0, MAX_PHOTOS_PER_SIDE);
+  }
+  if (typeof value === "string" && value.length > 0) return [value];
+  return [];
+}
+
 export function withDefaults(job: Job): Job {
-  return { ...JOB_DEFAULTS, ...job };
+  const merged = { ...JOB_DEFAULTS, ...job };
+  return {
+    ...merged,
+    photoBefore: toPhotoList(merged.photoBefore),
+    photoAfter: toPhotoList(merged.photoAfter),
+  };
 }
 
 export function freshJob(id: string): Job {
@@ -79,7 +101,8 @@ type Confirm =
   | { kind: "delete"; id: string }
   | { kind: "load"; id: string };
 
-type PhotoKey = "photoBefore" | "photoAfter" | "meterBefore" | "meterAfter";
+type VentPhotoKey = "photoBefore" | "photoAfter";
+type MeterPhotoKey = "meterBefore" | "meterAfter";
 
 type DvsState = {
   hydrated: boolean;
@@ -114,7 +137,9 @@ type DvsState = {
   setPayStatus: (payStatus: PayStatus) => void;
   setPayMethod: (payMethod: PayMethod) => void;
   setDocKind: (docKind: DocKind) => void;
-  setPhoto: (which: PhotoKey, data: string | null) => void;
+  setPhoto: (which: MeterPhotoKey, data: string | null) => void;
+  addPhotos: (which: VentPhotoKey, dataUrls: string[]) => number;
+  removePhoto: (which: VentPhotoKey, index: number) => void;
   setSignature: (signature: string | null) => void;
   loadSample: (notes: string) => void;
   newJob: () => void;
@@ -278,6 +303,17 @@ export const useDvs = create<DvsState>()(
           },
         }),
       setPhoto: (which, data) => set({ job: { ...get().job, [which]: data } }),
+      addPhotos: (which, dataUrls) => {
+        const job = get().job;
+        const room = Math.max(0, MAX_PHOTOS_PER_SIDE - job[which].length);
+        const added = dataUrls.slice(0, room);
+        if (added.length > 0) set({ job: { ...job, [which]: [...job[which], ...added] } });
+        return added.length;
+      },
+      removePhoto: (which, index) => {
+        const job = get().job;
+        set({ job: { ...job, [which]: job[which].filter((_, i) => i !== index) } });
+      },
       setSignature: (signature) => set({ job: { ...get().job, signature } }),
       loadSample: (notes) =>
         set({
@@ -324,7 +360,10 @@ export const useDvs = create<DvsState>()(
     {
       name: "dvs-field-command-v1",
       skipHydration: true,
-      version: 2,
+      // v3: vent photos became arrays; the bump forces migrate (withDefaults)
+      // to run over v2 data so single-string photos convert instead of leaking
+      // into the new shape untouched.
+      version: 3,
       partialize: (state): PersistedState => ({
         job: state.job,
         archive: state.archive,

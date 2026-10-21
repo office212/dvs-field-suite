@@ -158,7 +158,7 @@ export function readiness(job: Job) {
     { key: "missingWork", ok: job.docKind === "estimate" || job.actions.length > 0, weight: 10 },
     { key: "missingPrice", ok: job.catalogOn.length + job.customItems.length > 0, weight: 15 },
     { key: "missingSig", ok: Boolean(job.signature), weight: 10 },
-    { key: "missingPhotos", ok: Boolean(job.photoBefore && job.photoAfter), weight: 10 },
+    { key: "missingPhotos", ok: job.photoBefore.length > 0 && job.photoAfter.length > 0, weight: 10 },
   ];
   const score = checks.reduce((sum, check) => sum + (check.ok ? check.weight : 0), 0);
   return { score, missing: checks.filter((check) => !check.ok).map((check) => check.key) };
