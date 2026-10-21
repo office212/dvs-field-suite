@@ -1122,6 +1122,17 @@ export function SettingsOverlay() {
                 ]}
               />
             </div>
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-muted">{t(lang, "theme")}</p>
+              <Segment
+                value={settings.theme}
+                onChange={(theme) => patchSettings({ theme })}
+                options={[
+                  { id: "light" as const, label: t(lang, "light") },
+                  { id: "dark" as const, label: t(lang, "dark") },
+                ]}
+              />
+            </div>
           </div>
         </Section>
       </div>
